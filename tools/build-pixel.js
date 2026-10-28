@@ -341,5 +341,8 @@ let html = '';
 panels.forEach((p, i) => {
   html += `              <div class="slide" data-url="ragaudit v2 · how it works" data-cap="${p.cap.replace(/'/g,'&#39;')}">\n                <div class="screen">${p.svg}</div>\n              </div>\n`;
 });
-fs.writeFileSync(process.argv[2], html);
-console.log('panels', panels.length, 'bytes', html.length);
+module.exports = { C, SPR, R, S, T, esc, caption, bubble, card, shelf, page, dots, line, floor, svg };
+if (require.main === module) {
+  fs.writeFileSync(process.argv[2], html);
+  console.log('panels', panels.length, 'bytes', html.length);
+}
