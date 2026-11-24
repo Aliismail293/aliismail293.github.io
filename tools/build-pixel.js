@@ -337,9 +337,37 @@ const panels = [];
   panels.push({cap:'New pages, smart re-testing', svg: svg('Step 9: new pages arrive and get new questions, old questions get a spot-check, and questions about a deleted page are retired.', b)});
 }
 
+/* 10 · anyone can run it (v0.4) */
+{
+  let b = R(0,0,800,500,C.NV);
+  b += floor(440, C.DGY, C.GY);
+  b += R(40, 140, 344, 200, C.LGY) + R(48, 148, 328, 184, C.K);
+  b += T(60, 176, '$ PIP INSTALL RAGAUDIT-CLI', 10, C.LG);
+  b += T(60, 204, '$ RAGAUDIT UI', 10, C.LG);
+  b += T(60, 232, 'OPENING THE SETUP PAGE...', 8, C.LGY);
+  b += R(60, 256, 12, 16, C.LG);
+  b += T(60, 312, 'TWO COMMANDS, NO YAML TO WRITE', 8, C.YE);
+  b += R(24, 340, 376, 12, C.GY) + R(16, 352, 392, 8, C.LGY);
+  b += R(424, 132, 344, 196, C.WH) + R(428, 136, 336, 188, C.WH) + R(428, 136, 336, 28, C.SK);
+  b += R(440, 146, 8, 8, C.RD) + R(452, 146, 8, 8, C.YE) + R(464, 146, 8, 8, C.LG) + T(600, 156, 'RAGAUDIT SETUP', 8, C.K, 'middle');
+  [['1 PICK THE AI', true], ['2 YOUR DOCUMENTS', true], ['3 CONNECT YOUR APP', true], ['4 CHECK OR IMPROVE', false]].forEach(([t, done], i) => {
+    const y = 180 + i * 34;
+    b += R(444, y, 304, 26, done ? C.LGY : C.YE) + T(456, y + 17, t, 8, C.K);
+    if (done) b += S('check', 724, y + 7, 2);
+    else b += R(720, y + 7, 16, 12, C.K) + T(728, y + 17, '>', 8, C.YE, 'middle');
+  });
+  b += R(424, 344, 344, 88, C.K) + R(428, 348, 336, 80, C.DGY);
+  b += T(596, 370, 'REAL RUN, LOCAL MODELS', 8, C.LGY, 'middle');
+  b += T(596, 396, 'LOCKED EXAM 3/5 -> 5/5', 10, C.LG, 'middle');
+  b += T(596, 418, 'ONLY 5 QUESTIONS: A SMALL TEST', 8, C.YE, 'middle');
+  b += S('bot', 92, 364, 5) + S('owl', 248, 364, 5);
+  b += caption(10, ['10. NOW ANYONE CAN RUN IT: ONE INSTALL,', 'THEN A SETUP PAGE IN THE BROWSER. A REAL', 'DEMO RUN: EXAM 3/5 -> 5/5 (5 QUESTIONS).']);
+  panels.push({cap:'Anyone can run it', svg: svg('Step 10: a terminal shows pip install ragaudit-cli and ragaudit ui, which opens a four-step setup page. A real run on demo documents with local models raised the locked exam from 3 of 5 to 5 of 5, a small 5-question test.', b)});
+}
+
 let html = '';
 panels.forEach((p, i) => {
-  html += `              <div class="slide" data-url="ragaudit v2 · how it works" data-cap="${p.cap.replace(/'/g,'&#39;')}">\n                <div class="screen">${p.svg}</div>\n              </div>\n`;
+  html += `              <div class="slide" data-url="ragaudit · how it works" data-cap="${p.cap.replace(/'/g,'&#39;')}">\n                <div class="screen">${p.svg}</div>\n              </div>\n`;
 });
 module.exports = { C, SPR, R, S, T, esc, caption, bubble, card, shelf, page, dots, line, floor, svg };
 if (require.main === module) {

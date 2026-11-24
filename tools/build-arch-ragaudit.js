@@ -1,14 +1,14 @@
 const fs = require('fs');
 
-/* ragaudit v2 system design. Each node: k, x, y, w, h, title, sub[], rej?, file?, kind?, detail.
+/* ragaudit system design (v0.4). Each node: k, x, y, w, h, title, sub[], rej?, file?, kind?, detail.
    Edges: d (path), dashed?. Stages: label, x. viewBox 1600 x 740. */
 const W = 1600, H = 740;
 const ROW = [80, 180, 280, 380, 480];
 const NH = 72;
 
 const nodes = [
-  { k:'cli', x:40, y:ROW[0], w:250, title:'CLI entry', sub:['generate · evaluate · tune'], file:'cli.py · cli_v2.py',
-    detail:'Three v2 subcommands live in cli_v2.py next to the v1 CLI. v1 code paths and flags are untouched, so v1 sample reports and re-rendered v1 demo databases stay byte-identical.' },
+  { k:'cli', x:40, y:ROW[0], w:250, title:'Entry points', sub:['ui · check · improve', '+ generate · evaluate · tune'], file:'cli_easy.py · cli_improve.py · ui/',
+    detail:'pip install ragaudit-cli, then either the browser wizard (ragaudit ui) or one command. check runs ingest, generate, run and report, tries the adapter on one question first, prints a call estimate and asks before spending. improve runs the whole tune loop with no YAML to write. The wizard binds to 127.0.0.1 with a one-time token and calls ragaudit functions directly, never a shell. doctor names the exact fix for each setup problem.' },
   { k:'ingest', x:40, y:ROW[1], w:250, title:'Ingest + chunk', sub:['corpus → chunks with stable ids'], file:'ingest/',
     detail:'Loads the corpus and splits it into chunks with stable chunk_ids. Every generated question carries the chunk_id(s) it came from, which is what later makes failure classification exact instead of guessed.' },
   { k:'hash', x:40, y:ROW[2], w:250, title:'Content hashing', sub:['index_version = hash(chunk hashes)'],
@@ -40,33 +40,33 @@ const nodes = [
   { k:'cache', x:820, y:ROW[2], w:270, title:'Result cache', sub:['key: (question_id, config_hash,', '        index_version)'],
     detail:'Results are cached under (question_id, config_hash, index_version). If nothing relevant changed for a question, it is not re-run.' },
   { k:'pipe', x:820, y:ROW[3], w:270, kind:'ext', title:'Your RAG pipeline', sub:['adapter(config) · system under test'], file:'adapters/',
-    detail:'The system under test, wrapped in an adapter. Adapters were extended to accept a config dict (chunk_size, top_k, reranker and so on) and stay backward compatible with v1 adapters.' },
+    detail:'The system under test, wrapped in an adapter. ragaudit init writes the adapter for plain Python, LangChain or LlamaIndex. With --match-by text a hit is counted by text overlap with the gold chunk, so users never have to re-index their pipeline on ragaudit\'s chunk ids, which was the biggest blocker for new users.' },
   { k:'classify', x:820, y:ROW[4], w:270, title:'Failure classifier', sub:['pass · retrieval_miss', '· generation_miss'], file:'runner/evaluate.py',
     detail:'retrieval_miss: the gold chunk was not in the top-k. generation_miss: it was retrieved but the answer was still wrong. Because every question has gold chunk_ids, this is exact, and each class points to different knobs.' },
 
-  { k:'space', x:1150, y:ROW[0], w:230, title:'Search space (YAML)', sub:['chunk_size · top_k · reranker…'],
-    detail:'Declared knobs only: chunk_size, chunk_overlap, top_k, hybrid_weight, reranker, prompt_variant. Letting an LLM rewrite code freely is chaos; a bounded search is reproducible and defensible.' },
+  { k:'space', x:1150, y:ROW[0], w:230, title:'Search space (KNOBS)', sub:['chunk_size · top_k · reranker…'],
+    detail:'Declared knobs only: chunk_size, chunk_overlap, top_k, hybrid_weight, reranker, prompt_variant. Adapters can declare them in a KNOBS dict, so improve needs no YAML. Letting an LLM rewrite code freely is chaos; a bounded search is reproducible and defensible.' },
   { k:'strategy', x:1150, y:ROW[1], w:230, title:'Strategy', sub:['grid · random · llm-proposed'], file:'tune/strategies.py',
     detail:'Grid, seeded random, or llm: an LLM reads a summary of dev failures and proposes the next config, but it must stay inside the declared search space.' },
   { k:'loop', x:1150, y:ROW[2], w:230, title:'Trial loop (DEV only)', sub:['each trial → evaluate on dev'], file:'tune/loop.py',
     detail:'Each trial sends a config through evaluate on the dev set and records the score. It stops cleanly and saves progress when --max-trials or --max-llm-calls is reached.' },
   { k:'final', x:1150, y:ROW[3], w:230, kind:'lock', title:'Final score on TEST', sub:['best config, scored once'], file:'runner/locked.py',
-    detail:'The best dev config is run once on the locked test set. That single number is the reported result, because the loop never optimised against it.' },
+    detail:'The best dev config is run once on the locked test set. That single number is the reported result, because the loop never optimised against it. A real local run on the harder demo docs went from 3/5 to 5/5 on a 5-question locked exam (best: 800-character passages, top_k 5). Five questions is small, so the number is always shown with its sample size.' },
   { k:'overfit', x:1150, y:ROW[4], w:230, kind:'gate', title:'Overfit alarm', sub:['flag if dev − test > 10 pts'],
     detail:'If best-dev minus best-test is more than 10 points, the report flags overfitting. Rising dev scores with a flat test score is the signature.' },
 
   { k:'rgen', x:1420, y:ROW[1], w:150, title:'Generate report', sub:['rejections · overlap'],
     detail:'HTML report with counts, rejection reasons, the dev/test split, the lexical-overlap distribution and example questions.' },
-  { k:'rtune', x:1420, y:ROW[3], w:150, title:'Tune report', sub:['trials · dev vs test'], file:'report/',
-    detail:'Dev score per trial, dev vs test for baseline and best, failure breakdown before and after tuning, the overfit indicator and the best config. Sample reports on the docs site are labelled as mock-LLM runs, not real performance claims.' },
-  { k:'docs', x:1420, y:ROW[4], w:150, title:'Docs site', sub:['GitHub Pages'],
-    detail:'The landing page and sample reports are served from docs/ on GitHub Pages and share the report stylesheet.' },
+  { k:'rtune', x:1420, y:ROW[3], w:150, title:'Report', sub:['8 tabs · history'], file:'report/v3.py',
+    detail:'One self-contained HTML file with 8 tabs: overview, score history, verdicts, what failed, the improvement loop, all questions, how it works and how to run it. Every run adds a row to the history, and deltas between runs use only the questions both runs share, so comparisons stay fair. Sample reports are marked real or mock.' },
+  { k:'docs', x:1420, y:ROW[4], w:150, title:'Docs + PyPI', sub:['ragaudit-cli'],
+    detail:'Published on PyPI as ragaudit-cli (rag-audit was already taken). Releases are tag-triggered: the publish workflow checks the tag matches the version, runs the tests and uploads through trusted publishing. The docs site and sample reports are served from GitHub Pages.' },
 
   { k:'llm', x:40, y:628, w:250, h:84, title:'LLM client', sub:['OpenAI-compatible · local Ollama', 'qwen2.5 gen · llama3.1 verify'], file:'llm/client.py',
-    detail:'Configured by RAGAUDIT_API_BASE, RAGAUDIT_API_KEY and RAGAUDIT_MODEL, pointed at local Ollama: free, with no key to leak. The real-model path was smoke-tested on generate and its bugs fixed; a full real-model evaluate/tune run is still pending.' },
+    detail:'Configured by RAGAUDIT_API_BASE, RAGAUDIT_API_KEY and RAGAUDIT_MODEL (or ./.env), pointed at local Ollama: free, with no key to leak. The full improve loop has run end to end on local models, and that run found and fixed 3 bugs: proper names counted as copied wording, one malformed judge reply counted as a wrong answer, and a misleading out-of-budget message.' },
   { k:'store', x:330, y:628, w:430, h:84, kind:'store', title:'SQLite store', sub:['.ragaudit/store.db · schema-versioned', 'chunks · questions · splits · results · trials'], file:'storage/store.py',
     detail:'Standard-library sqlite3 with a schema-version table. It holds the incremental state that lets every command skip work it has already done. No heavy dependencies, and the folder is git-ignored.' },
-  { k:'mock', x:820, y:628, w:270, h:84, title:'Mock LLM + tests', sub:['deterministic · 272 tests pass', 'offline demo end-to-end in ~4 s'],
+  { k:'mock', x:820, y:628, w:270, h:84, title:'Mock LLM + tests', sub:['deterministic · 415 tests pass', 'offline demo end-to-end in ~4 s'],
     detail:'Tests never call a real model: a deterministic mock keeps them free, fast and reproducible. The offline demo runs generate → evaluate → corpus update → incremental re-evaluate → tune → reports in about 4 seconds.' },
   { k:'caps', x:1150, y:628, w:420, h:84, title:'Budget caps', sub:['--max-chunks · --max-llm-calls · --max-trials', 'stop cleanly, save progress'],
     detail:'Every command takes hard caps on chunks, LLM calls and trials. Hitting one stops the run cleanly and saves progress, so there is no runaway cost or runtime.' },
@@ -95,8 +95,8 @@ const labels = [
 const stages = [ ['1','INGEST',40], ['2','GENERATE',330], ['3','EVALUATE',820], ['4','TUNE',1150], ['5','REPORT',1420] ];
 
 const { render } = require('./arch-lib.js');
-const out = render({ id:'ragaudit-design', title:'ragaudit v2 · system design', W, H, NH, nodes, edges, dashed, labels, stages,
-  aria:'ragaudit v2 system design: ingest, generate, evaluate, tune and report stages over a shared SQLite store, LLM client, mock LLM and budget caps.',
+const out = render({ id:'ragaudit-design', title:'ragaudit · system design', W, H, NH, nodes, edges, dashed, labels, stages,
+  aria:'ragaudit system design: entry points (setup wizard, check, improve), ingest, generate, evaluate, tune and report stages over a shared SQLite store, LLM client, mock LLM and budget caps.',
   infra:{ y:604, label:'SHARED INFRASTRUCTURE' },
   legend:[['lg-gate','Quality gate'],['lg-lock','Locked test path'],['lg-ext','Your system under test'],['lg-dash','Data persisted / loop']] });
 fs.writeFileSync(process.argv[2], out);
