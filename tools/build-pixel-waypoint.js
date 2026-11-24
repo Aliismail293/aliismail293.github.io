@@ -1,7 +1,10 @@
 /* Waypoint story panels in the pixel house style. Usage: node build-pixel-waypoint.js out.html
    Story: V1 -> testing it as a student -> V3 fixes -> re-measured. Only verified numbers (WAYPOINT_PROJECT_CONTEXT):
    V1: 81% recall@5, 67% accuracy (21 held-out Qs), P95 16.0 s, 9/9 safety. User testing: a plan timed out at 31.7 s.
-   V3: 99.4% fact eval (167 Qs), 90% policy RAG (10 locked Qs). MAT236 prerequisite tree is real parsed calendar data. */
+   V3: 99.4% fact eval (167 Qs), 90% policy RAG (10 locked Qs). MAT236 prerequisite tree is real parsed calendar data.
+   Planning (10 live Qs, Nov 24): P95 46.9 s -> 3.2 s, $0.68 -> $0.005 for all 10, valid plans 10/10 by Waypoint's own
+   validator. Release gate: the candidate failed the live smoke test 4 times (2 bugs: empty model replies, cached failures).
+   Real screenshots and the Pip GIF come from the waypoint repo (docs/img, PR #8) and live in ../images/. */
 const fs = require('fs');
 const { C, SPR, R, S, T, esc, caption, bubble, card, page, dots, line, floor, svg } = require('./build-pixel.js');
 
@@ -12,9 +15,11 @@ SPR.critic = { pal:{ o:C.RD, w:C.WH, k:C.K, y:C.YE }, rows:[
   'o..........o','oo........oo','ooo......ooo','oooooooooooo','oyyyooooyyyo','oykyooooykyo',
   'wyyywwwwyyyw','.wwwwkkwwww.','..wwwwwwww..','..oooooooo..','.oooowwoooo.','.oooowwoooo.','..kk....kk..']};
 SPR.student = SPR.person;
-SPR.pip = { pal:{ c:C.CY, k:C.K, w:C.WH, y:C.YE, t:C.TE }, rows:[
-  '.....yy.....','.....tt.....','..cccccccc..','.cccccccccc.','.ckkkkkkkkc.','.ckwkkkkwkc.',
-  '.ckkkkkkkkc.','.ckkkwwkkkc.','.cccccccccc.','..tttttttt..','.cc.cccc.cc.','.cc.cccc.cc.','....tt.tt...']};
+/* Pip matches the real app's mascot (docs/img/pip.gif): indigo body, amber antenna and chest light. */
+const PIP = { I:'#6366f1', D:'#3730a3', A:'#f59e0b', F:'#141a2d' };
+SPR.pip = { pal:{ i:PIP.I, d:PIP.D, a:PIP.A, w:C.WH, k:PIP.F }, rows:[
+  '.....aa.....','.....dd.....','..iiiiiiii..','..iwwwwwwi..','..iwkwwkwi..','..iwwwwwwi..',
+  '..iwwkkwwi..','..iwwwwwwi..','..iiiiiiii..','.diiiaaiiid.','.diiiiiiiid.','..iiiiiiii..','...dd..dd...']};
 for (const n of ['fox','critic','pip']) { const w = SPR[n].rows[0].length; SPR[n].rows.forEach((r,i) => { if (r.length !== w) throw new Error(n + ' row ' + i); }); }
 
 const panel = (x, y, w, h, fill = C.K, border = C.WH) => R(x, y, w, h, border) + R(x + 4, y + 4, w - 8, h - 8, fill);
@@ -113,7 +118,7 @@ const panels = [];
   b += branch(140, 'MAT223', 'MAT240') + branch(460, 'MAT232', 'MAT233');
   b += panel(296, 364, 208, 44, C.K, C.LG) + T(388, 392, 'ELIGIBLE', 10, C.LG, 'middle') + S('check', 456, 380, 2);
   b += S('fox', 48, 372, 5) + T(78, 470, 'CODE DECIDES', 8, C.YE, 'middle');
-  b += S('pip', 696, 372, 5) + T(726, 470, 'AI EXPLAINS', 8, C.CY, 'middle');
+  b += S('pip', 696, 372, 5) + T(726, 470, 'AI EXPLAINS', 8, '#a5b4fc', 'middle');
   b += caption(6, ['6. FIX 1: FACTS BECAME DATA. PREREQS ARE', 'PARSED INTO AND / OR TREES AND CHECKED BY', 'CODE. THE AI ONLY EXPLAINS THE RESULT.']);
   panels.push({ cap:'Facts as data, not text', svg: svg('Step 6: the real prerequisite rule for MAT236 drawn as a tree: all of, one of MAT223 or MAT240, and one of MAT232 or MAT233. Code checks the courses taken and says eligible; the AI only explains.', b) });
 }
@@ -121,22 +126,24 @@ const panels = [];
 /* 7 · speed */
 {
   let b = sky + floor(440, C.DGY, C.GY);
-  b += panel(176, 128, 288, 148, C.K, C.CY) + T(192, 154, 'LIVE STEPS', 10, C.CY);
-  [['READING THE QUESTION', true], ['CHECKING PREREQS', true], ['WRITING THE ANSWER...', false]].forEach(([t, done], i) => {
+  b += panel(176, 128, 264, 140, C.K, C.CY) + T(192, 154, 'LIVE STEPS', 10, C.CY);
+  [['PLAN BUILT IN CODE', true], ['PLAN CHECKED IN CODE', true], ['EXPLAINING...', false]].forEach(([t, done], i) => {
     const y = 186 + i * 28;
     b += done ? S('check', 192, y - 10, 2) : T(196, y, '>', 8, C.YE);
     b += T(216, y, t, 8, done ? C.WH : C.YE);
   });
-  b += panel(176, 288, 288, 112, C.WH, C.LGY) + T(192, 312, 'ANSWER STREAMS IN', 8, C.K);
-  b += R(192, 328, 240, 8, C.LGY) + R(192, 344, 200, 8, C.LGY) + R(192, 360, 128, 8, C.LGY) + R(324, 358, 8, 12, C.K);
+  b += panel(176, 284, 264, 116, C.WH, C.LGY) + T(192, 308, 'YOUR PLAN, AT ONCE', 8, C.K);
+  b += R(192, 322, 112, 28, '#e0e7ff') + T(248, 340, 'FALL', 8, PIP.D, 'middle') + R(312, 322, 112, 28, '#e0e7ff') + T(368, 340, 'WINTER', 8, PIP.D, 'middle');
+  b += R(192, 362, 200, 8, C.LGY) + R(192, 378, 140, 8, C.LGY) + R(336, 376, 8, 12, C.K);
   b += S('pip', 48, 300, 8) + T(96, 470, 'PIP, THE GUIDE', 10, C.YE, 'middle');
-  b += panel(496, 128, 272, 48, C.K, C.YE) + T(632, 158, 'ROUTER', 10, C.YE, 'middle');
-  b += thick(600, 176, 560, 228, C.LGY) + thick(664, 176, 704, 228, C.LGY);
-  b += panel(496, 228, 128, 92, C.K, C.LG) + T(560, 254, 'SIMPLE?', 8, C.LG, 'middle') + T(560, 276, 'FAST LANE', 8, C.WH, 'middle') + T(560, 298, 'ONE CALL', 8, C.LGY, 'middle');
-  b += panel(640, 228, 128, 92, C.K, C.PU) + T(704, 254, 'A PLAN?', 8, C.YE, 'middle') + T(704, 276, 'FULL TEAM', 8, C.WH, 'middle') + T(704, 298, 'TIME LIMIT', 8, C.LGY, 'middle');
-  b += S('fox', 530, 344, 5) + S('fox', 652, 344, 4) + S('critic', 708, 344, 4);
-  b += caption(7, ['7. FIX 2: SPEED. A ROUTER SENDS SIMPLE', 'QUESTIONS DOWN A FAST LANE, AND PIP SHOWS', 'LIVE STEPS WHILE THE ANSWER STREAMS IN.']);
-  panels.push({ cap:'Faster, and you see it working', svg: svg('Step 7: Pip the robot guide shows live steps while the answer streams in. A router sends simple questions down a one-call fast lane and plans to the full team with a time limit.', b) });
+  b += panel(472, 128, 296, 272, C.K, C.YE) + T(620, 156, 'SLOWEST PLANS (P95)', 10, C.YE, 'middle');
+  b += T(492, 192, 'BEFORE', 8, C.LGY) + R(492, 200, 256, 20, C.RD) + T(744, 215, '46.9 S', 10, C.WH, 'end');
+  b += T(492, 248, 'NOW', 8, C.LGY) + R(492, 256, 20, 20, C.LG) + T(524, 271, '3.2 S', 10, C.LG);
+  b += R(492, 296, 256, 4, C.DGY);
+  b += T(492, 326, 'COST FOR ALL 10 PLANS', 8, C.LGY) + T(492, 352, '$0.68 -> $0.005', 13, C.WH);
+  b += T(620, 384, '10 LIVE PLANNING QUESTIONS', 8, C.LGY, 'middle');
+  b += caption(7, ['7. FIX 2: SPEED. PLANS ARE BUILT IN CODE', 'AND SHOWN AT ONCE, THEN PIP STREAMS A', 'SHORT EXPLANATION. 46.9 S -> 3.2 S.']);
+  panels.push({ cap:'Fix 2: speed', svg: svg('Step 7: Pip shows live steps: the plan is built and checked in code and shown at once, then a short explanation streams. The slowest 5 percent of plans went from 46.9 seconds to 3.2 seconds, and the cost of all 10 test plans from 68 cents to half a cent.', b) });
 }
 
 /* 8 · a clearer app */
@@ -167,22 +174,52 @@ const panels = [];
   panels.push({ cap:'A clearer app', svg: svg('Step 8: a course map where clicking MAT236 lights up its prerequisite path and dims everything else, with courses marked taken, in progress or planned, next to a plan with a calm note: take MAT232 before MAT236.', b) });
 }
 
-/* 9 · re-measured, and what's next */
+/* 9 · the release gate */
+{
+  let b = sky + floor(440, C.DGY, C.GY);
+  b += panel(40, 152, 176, 120, C.K, C.SK) + T(128, 184, 'NEW VERSION', 10, C.SK, 'middle') + T(128, 208, 'NO TRAFFIC YET', 8, C.LGY, 'middle');
+  b += S('pip', 104, 220, 4);
+  b += R(296, 136, 16, 300, C.LGY) + R(488, 136, 16, 300, C.LGY) + R(296, 136, 208, 24, C.YE) + T(400, 153, 'SMOKE TEST', 8, C.K, 'middle');
+  [1, 2, 3, 4].forEach(n => { const y = 172 + (n - 1) * 40;
+    b += T(328, y + 20, 'TRY ' + n, 8, C.WH) + S('cross', 444, y + 8, 3); });
+  b += T(328, 352, 'TRY 5', 8, C.WH) + S('check', 440, 338, 3);
+  b += thick(220, 212, 288, 212, C.LGY) + thick(512, 344, 568, 344, C.LG);
+  b += panel(576, 296, 192, 96, C.K, C.LG) + T(672, 328, 'GOES LIVE', 10, C.LG, 'middle') + T(672, 352, 'ONLY AFTER', 8, C.WH, 'middle') + T(672, 370, 'A PASS', 8, C.WH, 'middle');
+  b += panel(576, 136, 192, 144, C.WH, C.RD) + T(592, 160, 'BUGS IT CAUGHT', 8, C.RD);
+  b += T(592, 188, '1. EMPTY AI REPLY:', 8, C.K) + T(592, 204, 'PLANNER GAVE UP', 8, C.DGY);
+  b += T(592, 236, '2. THAT FAILURE', 8, C.K) + T(592, 252, 'GOT CACHED', 8, C.DGY);
+  b += S('critic', 336, 380, 4) + T(400, 470, 'BOTH FIXED, WITH TESTS', 8, C.LGY, 'middle');
+  b += caption(9, ['9. SHIPPING SAFELY: EACH NEW VERSION MUST', 'PASS A LIVE SMOKE TEST FIRST. IT FAILED 4', 'TIMES, CATCHING 2 BUGS, BEFORE GOING LIVE.']);
+  panels.push({ cap:'The release gate', svg: svg('Step 9: a new version waits behind a gate labelled smoke test. It fails four tries and passes on the fifth, and only then goes live. The gate caught two bugs: the planner gave up on an empty AI reply, and that failure got cached.', b) });
+}
+
+/* 10 · re-measured, and what's next */
 {
   let b = R(0, 0, 800, 500, C.K) + floor(452, C.DGY, C.NV);
-  b += panel(152, 124, 496, 236, C.NV, C.WH) + R(156, 128, 488, 36, C.BL) + T(400, 152, 'RE-TESTED WITH RAGAUDIT', 10, C.WH, 'middle');
-  const rows = [['FACT CHECKS, 167 QUESTIONS', '99.4%', C.LG, .994], ['POLICY, 10 LOCKED QUESTIONS', '90%', C.YE, .9], ['ATTACKS BLOCKED', '9/9', C.LG, 1]];
-  rows.forEach(([n, v, c, f], i) => { const y = 196 + i * 56;
-    b += T(180, y, n, 10, C.WH) + T(620, y, v, 16, c, 'end') + R(180, y + 14, 440, 8, C.DGY) + R(180, y + 14, Math.round(440 * f), 8, c); });
-  b += panel(152, 372, 496, 64, C.K, C.LG) + T(400, 398, 'NEXT: ALL 3 CAMPUSES + REAL STUDENTS', 10, C.LG, 'middle') + T(400, 420, 'U OF T DATA ACCESS REQUESTED', 8, C.LGY, 'middle');
-  b += S('owl', 40, 360, 5) + S('fox', 688, 368, 5);
-  b += caption(9, ['9. RE-TESTED WITH RAGAUDIT, MY OWN TOOL.', 'NEXT: DATA FOR ALL THREE U OF T CAMPUSES,', 'THEN REAL STUDENTS USING IT.']);
-  panels.push({ cap:'Re-measured, and what’s next', svg: svg('Step 9: the ragaudit owl shows the new scores: 99.4 percent on 167 fact checks, 90 percent on 10 locked policy questions, and 9 of 9 attacks blocked. Next: data for all three U of T campuses, then real students.', b) });
+  b += panel(152, 124, 496, 244, C.NV, C.WH) + R(156, 128, 488, 36, C.BL) + T(400, 152, 'RE-TESTED WITH RAGAUDIT + CODE', 10, C.WH, 'middle');
+  const rows = [['FACT CHECKS, 167 QUESTIONS', '99.4%', C.LG, .994], ['POLICY, 10 LOCKED QUESTIONS', '90%', C.YE, .9], ['VALID PLANS, 10 QUESTIONS', '10/10', C.LG, 1], ['ATTACKS BLOCKED', '9/9', C.LG, 1]];
+  rows.forEach(([n, v, c, f], i) => { const y = 190 + i * 44;
+    b += T(180, y, n, 10, C.WH) + T(620, y, v, 14, c, 'end') + R(180, y + 10, 440, 6, C.DGY) + R(180, y + 10, Math.round(440 * f), 6, c); });
+  b += panel(152, 380, 496, 56, C.K, C.LG) + T(400, 403, 'NEXT: ALL 3 CAMPUSES + REAL STUDENTS', 10, C.LG, 'middle') + T(400, 423, 'U OF T DATA ACCESS REQUESTED', 8, C.LGY, 'middle');
+  b += S('owl', 40, 360, 5) + S('pip', 692, 372, 5);
+  b += caption(10, ['10. RE-TESTED WITH RAGAUDIT AND CODE.', 'NEXT: DATA FOR ALL THREE U OF T CAMPUSES,', 'THEN REAL STUDENTS USING IT.']);
+  panels.push({ cap:'Re-measured, and what’s next', svg: svg('Step 10: the new scores: 99.4 percent on 167 fact checks, 90 percent on 10 locked policy questions, 10 of 10 valid plans by Waypoint’s own validator, and 9 of 9 attacks blocked. Next: data for all three U of T campuses, then real students.', b) });
 }
+
+/* real screenshots from the live app, placed right after the panel they prove */
+const shots = [
+  [6, 'images/waypoint-chat.png', 'Real app: a fact answer with its source', 'Waypoint chat answering what is needed before MAT224H5 with one calendar source and zero model calls'],
+  [7, 'images/waypoint-pip.gif', 'Real app: Pip’s four states', 'Pip, the pixel robot, in its four states: idle, thinking, talking and waving'],
+  [8, 'images/waypoint-course-map.png', 'Real app: the course map', 'Course map of 100- and 200-level MAT courses, with taken courses outlined in green'],
+  [8, 'images/waypoint-my-plan.png', 'Real app: My plan with critic notes', 'My plan with two terms and a critic report that lists two calm notes'],
+  [8, 'images/waypoint-programs.png', 'Real app: Programs', 'Programs list with the Mathematics major, Applied Mathematics major, minor and specialist'],
+];
+for (const [after, src, cap, alt] of shots.slice().reverse()) panels.splice(after, 0, { cap, img: src, alt, url: 'waypoint-courses.web.app' });
 
 let html = '';
 panels.forEach(p => {
-  html += `              <div class="slide" data-url="waypoint · how it works" data-cap="${esc(p.cap)}">\n                <div class="screen">${p.svg}</div>\n              </div>\n`;
+  const inner = p.img ? `<img src="${p.img}" alt="${esc(p.alt)}" loading="lazy">` : p.svg;
+  html += `              <div class="slide" data-url="${p.url || 'waypoint · how it works'}" data-cap="${esc(p.cap)}">\n                <div class="screen">${inner}</div>\n              </div>\n`;
 });
 fs.writeFileSync(process.argv[2], html);
 console.log('panels', panels.length, html.length);
