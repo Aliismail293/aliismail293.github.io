@@ -365,9 +365,21 @@ const panels = [];
   panels.push({cap:'Anyone can run it', svg: svg('Step 10: a terminal shows pip install ragaudit-cli and ragaudit ui, which opens a four-step setup page. A real run on demo documents with local models raised the locked exam from 3 of 5 to 5 of 5, a small 5-question test.', b)});
 }
 
+/* Real screenshots of the v0.4 report (sample-report-improve.html, a real local Ollama run on Nov 15, 2026),
+   placed right after the panel they prove. Files live in ../images/. */
+const shots = [
+  [6, 'images/ragaudit-verdicts.png', 'Real report: the four verdicts', 'ragaudit report Verdicts tab: true pass, lucky pass, generation failure and retrieval failure, from a real local run'],
+  [8, 'images/ragaudit-improve-loop.png', 'Real report: practice vs locked exam', 'ragaudit report Improvement loop tab: locked exam 60 to 100 on 5 questions, practice 100, settings changed chunk size and top_k'],
+  [10, 'images/ragaudit-welcome.png', 'Real report: the welcome popup', 'ragaudit report welcome popup explaining the report with a six-picture slideshow'],
+  [10, 'images/ragaudit-overview.png', 'Real report: the overview', 'ragaudit report Overview tab: 16 of 16 practice questions were true passes, with retrieval hit, correctness and lucky-pass counts'],
+];
+const all = panels.slice();
+for (const [after, src, cap, alt] of shots.slice().reverse()) all.splice(after, 0, { cap, img: src, alt, url: 'ragaudit report · real local run' });
+
 let html = '';
-panels.forEach((p, i) => {
-  html += `              <div class="slide" data-url="ragaudit · how it works" data-cap="${p.cap.replace(/'/g,'&#39;')}">\n                <div class="screen">${p.svg}</div>\n              </div>\n`;
+all.forEach(p => {
+  const inner = p.img ? `<img src="${p.img}" alt="${esc(p.alt)}" loading="lazy">` : p.svg;
+  html += `              <div class="slide" data-url="${p.url || 'ragaudit · how it works'}" data-cap="${p.cap.replace(/'/g,'&#39;')}">\n                <div class="screen">${inner}</div>\n              </div>\n`;
 });
 module.exports = { C, SPR, R, S, T, esc, caption, bubble, card, shelf, page, dots, line, floor, svg };
 if (require.main === module) {
