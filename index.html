@@ -238,9 +238,9 @@ figcaption .count{font-variant-numeric:tabular-nums;font-weight:600;color:var(--
 .tiles em{font-style:normal;font-family:var(--mono);font-size:.78em;color:var(--good)}
 
 /* resume */
-.resume{border-top:2px solid var(--ink);scroll-margin-top:60px}
-.resume .wrap{display:grid;grid-template-columns:1fr 2fr;gap:clamp(28px,5vw,72px);padding-block:clamp(56px,8vw,96px)}
-.resume h2,.contact h2{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,4.4vw,3.6rem);letter-spacing:-.03em;line-height:.95;margin:0 0 16px}
+.resume,.research{border-top:2px solid var(--ink);scroll-margin-top:60px}
+.resume .wrap,.research .wrap{display:grid;grid-template-columns:1fr 2fr;gap:clamp(28px,5vw,72px);padding-block:clamp(56px,8vw,96px)}
+.resume h2,.contact h2,.research h2{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,4.4vw,3.6rem);letter-spacing:-.03em;line-height:.95;margin:0 0 16px}
 .side p{color:var(--ink-soft);margin:0 0 20px;max-width:32ch}
 .small{font-size:.8rem;color:var(--ink-soft);margin-top:12px}
 .tl{display:grid;min-width:0}
@@ -325,11 +325,16 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;p
 .pdf-view{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--screen);aspect-ratio:8.5/11;max-height:min(1100px,150vw);box-shadow:0 30px 60px -40px var(--shadow)}
 .pdf-view iframe{display:block;width:100%;height:100%;border:0}
 .resume .small a{color:var(--accent);font-weight:600}
+.paper-card{border:1px solid var(--line);border-radius:14px;padding:clamp(18px,3vw,28px);background:var(--screen);color:var(--screen-ink)}
+.paper-card h3{font-family:var(--display);font-weight:700;font-size:clamp(1.2rem,2.2vw,1.6rem);line-height:1.15;margin:8px 0 12px}
+.paper-card ul{margin:0 0 16px;padding-left:1.1em;color:var(--screen-soft)}
+.paper-card li{margin:4px 0}
+.paper-card .links{display:flex;flex-wrap:wrap;gap:10px}
 /* real screenshots: <div class="screen"><img src="images/x.png" alt="..."></div> */
 .screen img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}
 
 @media (max-width:900px){
-  .hero .wrap,.resume .wrap,.contact .wrap{grid-template-columns:1fr}
+  .hero .wrap,.resume .wrap,.research .wrap,.contact .wrap{grid-template-columns:1fr}
   .build-grid,.build.flip .build-grid{grid-template-columns:1fr}
   .build.flip .shot{order:0}
 }
@@ -353,6 +358,7 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;p
     <a class="mark" href="#top">Ali Ismail <span>· Portfolio</span></a>
     <nav class="nav" aria-label="Sections">
       <a href="#builds">Builds</a>
+      <a href="#research">Research</a>
       <a href="#resume">Resume</a>
       <a href="#contact">Contact</a>
       <a href="https://github.com/Aliismail293" target="_blank" rel="noopener">GitHub ↗</a>
@@ -713,6 +719,32 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;p
       </div>
   </section>
 </main>
+
+<!-- DRAFT for Ali (Phase 8). Title, status and summary must be approved before this reaches main.
+     Fill the TODOs from results/FINDINGS.md once the full run is in; numbers only with their n and interval. -->
+<section class="research" id="research">
+  <div class="wrap">
+    <div class="side">
+      <h2>Research</h2>
+      <p>Where a build raised a question worth measuring properly. Code, configs and every result file are public, so each number can be checked.</p>
+    </div>
+    <div class="tl">
+      <article class="paper-card">
+        <span class="pill dev">In progress</span>
+        <h3>Lucky passes: when a RAG app is right for the wrong reason</h3>
+        <ul>
+          <li>ragaudit kept finding answers scored correct even though the right passage was never retrieved. This study measures how often that happens, and why: the model's memory, or a lucky guess.</li>
+          <li>Small local models (3B&ndash;8B, Ollama) on HotpotQA, Natural Questions, a university calendar, and invented documents no model has seen, across keyword, vector and hybrid search.</li>
+          <li>The method is being added to ragaudit as <code>ragaudit report --lucky</code>, which flags lucky passes per question on your own documents.</li>
+        </ul>
+        <div class="links">
+          <a class="btn solid" href="https://github.com/Aliismail293/lucky-passes" target="_blank" rel="noopener">Code and results ↗</a>
+          <!-- TODO (Ali): paper PDF link once it exists; venue once submitted. -->
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
 
 <section class="resume" id="resume">
   <div class="wrap">
